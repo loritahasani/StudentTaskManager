@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
-import { View, ScrollView, StyleSheet } from 'react-native';
+import { View, ScrollView, StyleSheet, Alert } from 'react-native';
 import { Button, TextInput, Menu } from 'react-native-paper';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { DatePickerInput } from 'react-native-paper-dates';
 
-export default function AddTaskScreen({ navigation }) {
+export default function AddTaskScreen({ navigation, route }) {
   const [title, setTitle] = useState('');
   const [course, setCourse] = useState('');
   const [deadline, setDeadline] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const [priority, setPriority] = useState('Medium');
   const [courseMenuVisible, setCourseMenuVisible] = useState(false);
   const [priorityMenuVisible, setPriorityMenuVisible] = useState(false);
@@ -21,35 +19,41 @@ export default function AddTaskScreen({ navigation }) {
     { label: 'Geography', value: 'Geography' },
   ];
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    // Validate inputs
     if (!title.trim()) {
-      alert('Please enter a task title');
+      Alert.alert('Error', 'Please enter a task title');
       return;
     }
     if (!course.trim()) {
-      alert('Please select a course');
+      Alert.alert('Error', 'Please select a course');
       return;
     }
+
+    // Create new task object
     const newTask = {
-      id: Date.now().toString(),
+      id: Date.now().toString(), // Unique ID
       title,
       course,
-      deadline: deadline.toISOString().split('T')[0],
+      deadline: deadline.toISOString().split('T')[0], // Format as YYYY-MM-DD
       priority,
-      progress: 0,
+      progress: 0, // Default progress
     };
-    navigation.navigate('Home', { newTask });
-  };
 
-  const onDateChange = (event, selectedDate) => {
-    setShowDatePicker(false);
-    if (selectedDate) {
-      setDeadline(selectedDate);
+    console.log('New Task:', newTask); // Debugging log
+
+    // Pass the new task back to HomeScreen
+    if (route.params?.saveTask) {
+      await route.params.saveTask(newTask);
     }
+
+    // Navigate back to HomeScreen
+    navigation.goBack();
   };
 
   return (
     <ScrollView style={styles.container}>
+      {/* Task Title Input */}
       <TextInput
         label="Task Title"
         value={title}
@@ -57,47 +61,47 @@ export default function AddTaskScreen({ navigation }) {
         style={styles.input}
         mode="outlined"
       />
-      
-      {/* Course Menu */}
+
+      {/* Course Selection Menu */}
       <View style={styles.menuContainer}>
-  <Menu
-    visible={courseMenuVisible}
-    onDismiss={() => setCourseMenuVisible(false)}
-    anchor={
-      <Button
-        mode="outlined"
-        onPress={() => setCourseMenuVisible(true)}
+        <Menu
+          visible={courseMenuVisible}
+          onDismiss={() => setCourseMenuVisible(false)}
+          anchor={
+            <Button
+              mode="outlined"
+              onPress={() => setCourseMenuVisible(true)}
+              style={styles.input}
+              icon="book"
+            >
+              {course ? `Course: ${course}` : 'Select Course'}
+            </Button>
+          }
+        >
+          {courseOptions.map((option) => (
+            <Menu.Item
+              key={option.value}
+              title={option.label}
+              onPress={() => {
+                setCourse(option.value);
+                setCourseMenuVisible(false);
+              }}
+            />
+          ))}
+        </Menu>
+      </View>
+
+      {/* Deadline Date Picker */}
+      <DatePickerInput
+        label="Deadline"
+        value={deadline}
+        onChange={(date) => setDeadline(date)}
         style={styles.input}
-        icon="book"
-      >
-        {course ? `Course: ${course}` : 'Select Course'}
-      </Button>
-    }
-  >
-    {courseOptions.map((option) => (
-      <Menu.Item
-        key={option.value}
-        title={option.label}
-        onPress={() => {
-          setCourse(option.value);
-          setCourseMenuVisible(false);
-        }}
+        locale="en"
+        mode="outlined"
       />
-    ))}
-  </Menu>
-</View>
 
-
-<DatePickerInput
-  label="Deadline"
-  value={deadline}
-  onChange={(date) => setDeadline(date)}
-  style={styles.input}
-  locale="en"
-  mode="outlined"
-/>
-
-      {/* Priority Menu */}
+      {/* Priority Selection Menu */}
       <Menu
         visible={priorityMenuVisible}
         onDismiss={() => setPriorityMenuVisible(false)}
@@ -106,7 +110,8 @@ export default function AddTaskScreen({ navigation }) {
             mode="outlined"
             onPress={() => setPriorityMenuVisible(true)}
             style={styles.input}
-            icon="alert-circle">
+            icon="alert-circle"
+          >
             Priority: {priority}
           </Button>
         }
@@ -134,6 +139,7 @@ export default function AddTaskScreen({ navigation }) {
         />
       </Menu>
 
+      {/* Save Button */}
       <Button
         mode="contained"
         onPress={handleSave}
@@ -156,5 +162,5 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: 20,
-  },
+  }
 });
