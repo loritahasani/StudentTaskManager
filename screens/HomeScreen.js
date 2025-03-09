@@ -10,7 +10,7 @@ export default function HomeScreen({ navigation, route }) {
   const [tasks, setTasks] = useState([]);
   const [editingTask, setEditingTask] = useState(null);
   const [progressValue, setProgressValue] = useState(0);
-  const [menuVisibleTaskId, setMenuVisibleTaskId] = useState(null); // Track which menu is open
+  const [menuVisibleTaskId, setMenuVisibleTaskId] = useState(null);
 
   useEffect(() => {
     loadTasks();
@@ -92,6 +92,14 @@ export default function HomeScreen({ navigation, route }) {
     await saveTasks(updatedTasks);
   };
 
+  const markTaskAsDone = async (taskId) => {
+    const updatedTasks = tasks.map(task =>
+      task.id === taskId ? { ...task, progress: 100 } : task
+    );
+    setTasks(updatedTasks);
+    await saveTasks(updatedTasks);
+  };
+
   const renderItem = ({ item }) => (
     <Card style={styles.card}>
       <Card.Content>
@@ -118,6 +126,14 @@ export default function HomeScreen({ navigation, route }) {
               title="Delete"
               titleStyle={{ color: 'red' }}
             />
+            <Menu.Item
+              onPress={() => {
+                setMenuVisibleTaskId(null);
+                markTaskAsDone(item.id);
+              }}
+              title="Mark as Done"
+              titleStyle={{ color: 'green' }}
+            />
           </Menu>
         </View>
     
@@ -127,7 +143,7 @@ export default function HomeScreen({ navigation, route }) {
         <ProgressBar 
           progress={item.progress / 100} 
           style={styles.progressBar}
-          color="#FFF"
+          color={getProgressColor(item.progress)}
         />
         <Text variant="bodySmall" style={styles.cardText}>{item.progress}% Complete</Text>
       </Card.Content>
@@ -174,7 +190,7 @@ export default function HomeScreen({ navigation, route }) {
       <FlatList
         data={tasks}
         renderItem={renderItem}
-        keyExtractor={item => item.id.toString()} // Ensure the key is unique
+        keyExtractor={item => item.id.toString()}
       />
       <FAB
         style={styles.fab}
@@ -195,7 +211,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     overflow: 'hidden',
     elevation: 5,
-    backgroundColor: '#6a11cb', // Purple background for task cards
+    backgroundColor: '#6a11cb',
   },
   cardHeader: {
     flexDirection: 'row',
@@ -203,25 +219,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cardTitle: {
-    color: '#FFF', // White text for better readability
+    color: '#FFF',
     fontSize: 18,
     fontWeight: 'bold',
   },
   cardText: {
-    color: '#FFF', // White text for better readability
+    color: '#FFF',
     marginVertical: 3,
   },
   progressBar: {
     height: 8,
     marginVertical: 10,
     borderRadius: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)', // Semi-transparent white background
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
   },
   fab: {
     position: 'absolute',
     margin: 16,
     right: 0,
     bottom: 0,
-    backgroundColor: '#6a11cb', // Purple FAB to match the theme
+    backgroundColor: '#6a11cb',
   },
 });

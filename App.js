@@ -8,6 +8,7 @@ import AnalyticsScreen from './screens/AnalyticsScreen';
 import { Provider as PaperProvider } from 'react-native-paper';
 import { Calendar } from 'react-native-calendars';
 
+
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
